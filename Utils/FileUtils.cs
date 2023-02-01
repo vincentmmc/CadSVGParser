@@ -1,6 +1,8 @@
 ﻿using Autodesk.AutoCAD.Windows;
+using SVGParser.Utils;
 using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -8,13 +10,22 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using SaveFileDialog = Autodesk.AutoCAD.Windows.SaveFileDialog;
 
-namespace CADParser.Utils
+namespace SVGParser.Utils
 {
     class FileUtils
     {
         public static void OpenDialogToSaveFile(string context)
         {
-            SaveFileDialog dialog = new SaveFileDialog("Save As", "output.svg", "", "", SaveFileDialog.SaveFileDialogFlags.AllowAnyExtension);
+            SaveFileDialog dialog = new SaveFileDialog("Save SVG As", "output.svg", "", "", SaveFileDialog.SaveFileDialogFlags.AllowAnyExtension);
+            if (dialog.ShowDialog() == DialogResult.OK)
+            {
+                SaveFile(dialog.Filename, context);
+            }
+        }
+
+        public static void OpenDialogToSaveFile(Bitmap context)
+        {
+            SaveFileDialog dialog = new SaveFileDialog("Save PNG As", "output.png", "", "", SaveFileDialog.SaveFileDialogFlags.AllowAnyExtension);
             if (dialog.ShowDialog() == DialogResult.OK)
             {
                 SaveFile(dialog.Filename, context);
@@ -50,11 +61,28 @@ namespace CADParser.Utils
             fs.Close();
         }
 
+        public static void SaveFile(string filePath, Bitmap context)
+        {
+            if (context == null)
+            {
+                return;
+            }
+            string directoryName = ReplaceInvalidChars(Path.GetDirectoryName(filePath), Path.GetInvalidPathChars());
+            string name = ReplaceInvalidChars(Path.GetFileName(filePath), Path.GetInvalidFileNameChars());
+            if (!Directory.Exists(directoryName))
+            {
+                return;
+            }
+            string fileName = Path.Combine(directoryName, name);
+            context.Save(fileName, System.Drawing.Imaging.ImageFormat.Png);
+            context.Dispose();
+        }
+
         public static string GetSaveFolder()
         {
             FolderBrowserDialog dilog = new FolderBrowserDialog();
             dilog.Description = "Select Folder";
-            if (dilog.ShowDialog() == DialogResult.OK || dilog.ShowDialog() == DialogResult.Yes)
+            if (dilog.ShowDialog() == DialogResult.OK)
             {
                 return dilog.SelectedPath;
             }

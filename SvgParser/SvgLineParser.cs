@@ -5,9 +5,9 @@ using System.Text;
 using System.Threading.Tasks;
 using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.Geometry;
-using CADParser.SvgParser.core;
+using SVGParser.SvgParser.core;
 
-namespace CADParser
+namespace SVGParser
 {
     public class SvgLineParser : SvgParserBase
     {

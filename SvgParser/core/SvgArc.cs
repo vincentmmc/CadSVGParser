@@ -2,7 +2,7 @@
 using Autodesk.AutoCAD.Geometry;
 using System;
 
-namespace CADParser
+namespace SVGParser
 {
     class SvgArc
     {

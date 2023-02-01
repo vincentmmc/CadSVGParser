@@ -5,10 +5,12 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Autodesk.AutoCAD.Geometry;
-using CADParser.SvgParser.core;
-using CADParser.SvgParser;
+using SVGParser.SvgParser.core;
+using SVGParser.SvgParser;
+using SVGParser.Utils;
+using System.Drawing;
 
-namespace CADParser
+namespace SVGParser
 {
     public class SvgConverter
     {
@@ -44,6 +46,76 @@ namespace CADParser
             string svgStr = string.Format("<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"{0}\" height=\"{1}\" viewBox=\"{2}\">{3}</svg>", sizeX.ToString(), sizeY.ToString(), viewBoxStr, paths);
             return svgStr;
         }
+
+        public Bitmap ParseToBitmap()
+        {
+            List<SvgParserBase> parsers = new List<SvgParserBase>();
+            foreach (Entity entity in this._entities)
+            {
+                SvgParserBase parser = this.GetParser(entity, this._layerInfoDict);
+                if (parser == null)
+                {
+                    continue;
+                }
+                parsers.Add(parser);
+            }
+            parsers.Sort();
+
+            // image draw datas
+            List<ImageDrawData> drawDatas = new List<ImageDrawData>();
+            foreach (SvgParserBase p in parsers)
+            {
+                List<Point2d> points = new List<Point2d>();
+                bool isClosePath = false;
+                System.Drawing.Color color = System.Drawing.Color.White;
+                Tuple<bool, List<Point3d>> pointResult = EntityUtils.GetPoints(p.entity, 1, 5, 1000);
+                List<Point3d> point3ds = pointResult.Item2;
+
+                if(point3ds.Count==0)
+                {
+                    continue;
+                }
+
+                if (p is SvgHatchParser)
+                {
+                    point3ds.ForEach(pp =>
+                    {
+                        points.Add(EntityUtils.to2d(pp));
+                    });
+                    isClosePath = true;
+                    color = System.Drawing.Color.White;
+                }
+                else
+                {
+                    point3ds.ForEach(pp =>
+                    {
+                        points.Add(EntityUtils.to2d(pp));
+                    });
+                    if (pointResult.Item1)
+                    {
+                        points.Add(EntityUtils.to2d(point3ds[0]));
+                    }
+                    color = System.Drawing.Color.Black;
+                }
+
+
+                ImageDrawData drawData = new ImageDrawData();
+                drawData.color = color;
+                drawData.point2ds = points;
+                drawData.isClosePath = isClosePath;
+                drawDatas.Add(drawData);
+            }
+
+            // size and offset
+            Extents3d extents = this.GetExtents(parsers, DEFAULT_LINE_WIDTH * 0.5);
+            double sizeX = extents.MaxPoint.X - extents.MinPoint.X;
+            double sizeY = extents.MaxPoint.Y - extents.MinPoint.Y;
+            Vector2d offset = new Vector2d(-extents.MinPoint.X, -extents.MinPoint.Y);
+
+            Bitmap bitmap = ImageUtils.Draw(2f,512f, sizeX, sizeY, offset, drawDatas);
+            return bitmap;
+        }
+
 
         private SvgParserBase GetParser(Entity entity, Dictionary<ObjectId, LayerInfo> layerInfoDict)
         {

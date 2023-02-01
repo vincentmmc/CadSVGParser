@@ -6,7 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace CADParser.Utils
+namespace SVGParser.Utils
 {
     class EntityUtils
     {
@@ -95,7 +95,7 @@ namespace CADParser.Utils
                 {
                     Arc arc = curve as Arc;
                     double length = arc.Length;
-                    double segmentCount = Math.Max(Math.Ceiling(length / segmentDist), minSegmentCount);
+                    double segmentCount = Math.Min(Math.Max(Math.Ceiling(length / segmentDist), minSegmentCount), maxSegmentCount);
                     double distance = length / segmentCount;
                     for (int i = 0; i <= segmentCount; i++)
                     {
@@ -152,13 +152,19 @@ namespace CADParser.Utils
                                 }
                                 Arc arc = new Arc(to3d(svgArc.originCenter), svgArc.radius, startAngle, endAngle);
                                 double length = arc.Length;
-                                double segmentCount = Math.Max(Math.Ceiling(length / segmentDist), minSegmentCount);
+                                double segmentCount = Math.Min(Math.Max(Math.Ceiling(length / segmentDist), minSegmentCount), maxSegmentCount);
                                 double distance = length / segmentCount;
+                                List<Point3d> midPoints = new List<Point3d>();
                                 for (int sIndex = 1; sIndex < segmentCount; sIndex++)
                                 {
                                     Point3d p = arc.GetPointAtDist(Math.Min(sIndex * distance, length));
-                                    centerPoints.Add(p);
+                                    midPoints.Add(p);
                                 }
+                                if(midPoints[0].DistanceTo(curPoint)> midPoints[0].DistanceTo(nextPoint))
+                                {
+                                    midPoints.Reverse();
+                                }
+                                centerPoints.AddRange(midPoints);
                             }
                         }
 
@@ -266,13 +272,19 @@ namespace CADParser.Utils
                                 }
                                 Arc arc = new Arc(to3d(svgArc.originCenter), svgArc.radius, startAngle, endAngle);
                                 double length = arc.Length;
-                                double segmentCount = Math.Max(Math.Ceiling(length / segmentDist), minSegmentCount);
+                                double segmentCount = Math.Min(Math.Max(Math.Ceiling(length / segmentDist), minSegmentCount), maxSegmentCount);
                                 double distance = length / segmentCount;
+                                List<Point3d> midPoints = new List<Point3d>();
                                 for (int sIndex = 1; sIndex < segmentCount; sIndex++)
                                 {
                                     Point3d p = arc.GetPointAtDist(Math.Min(sIndex * distance, length));
-                                    centerPoints.Add(p);
+                                    midPoints.Add(p);
                                 }
+                                if (midPoints[0].DistanceTo(to3d(bulgeVertex.Vertex)) > midPoints[0].DistanceTo(to3d(nextBulgeVertex.Vertex)))
+                                {
+                                    midPoints.Reverse();
+                                }
+                                centerPoints.AddRange(midPoints);
                             }
 
                             points.Add(to3d(bulgeVertex.Vertex));

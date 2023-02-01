@@ -1,14 +1,14 @@
 ﻿using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.Geometry;
-using CADParser.SvgParser.core;
-using CADParser.Utils;
+using SVGParser.SvgParser.core;
+using SVGParser.Utils;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace CADParser
+namespace SVGParser
 {
     class SvgEllipseParser : SvgParserBase
     {

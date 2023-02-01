@@ -9,10 +9,10 @@ using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.EditorInput;
 using Autodesk.AutoCAD.Geometry;
 using Autodesk.AutoCAD.Runtime;
-using CADParser.SvgParser.core;
-using CADParser.Utils;
+using SVGParser.SvgParser.core;
+using SVGParser.Utils;
 
-namespace CADParser
+namespace SVGParser
 {
     class MsgManager
     {

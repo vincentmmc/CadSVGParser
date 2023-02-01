@@ -1,13 +1,13 @@
 ﻿using Autodesk.AutoCAD.Colors;
 using Autodesk.AutoCAD.DatabaseServices;
-using CADParser.SvgParser.core;
+using SVGParser.SvgParser.core;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace CADParser
+namespace SVGParser.Utils
 {
     class ColorUtils
     {

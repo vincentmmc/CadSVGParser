@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace CADParser.SvgParser.core
+namespace SVGParser.SvgParser.core
 {
     public struct LayerInfo
     {
