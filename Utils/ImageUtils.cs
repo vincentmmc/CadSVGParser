@@ -40,7 +40,7 @@ namespace SVGParser.Utils
             g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
             g.InterpolationMode = System.Drawing.Drawing2D.InterpolationMode.HighQualityBilinear;
             g.CompositingQuality = System.Drawing.Drawing2D.CompositingQuality.HighQuality;
-            //g.FillRectangle(new SolidBrush(Color.White), 0, 0, imgWidth, imgHeight);
+            //g.FillRectangle(new SolidBrush(Color.Red), 0, 0, imgWidth, imgHeight);
 
             Pen pen = new Pen(new SolidBrush(Color.Black), lineWidth);
             pen.LineJoin = System.Drawing.Drawing2D.LineJoin.Round;
@@ -53,7 +53,7 @@ namespace SVGParser.Utils
                     for (int i = 0; i < dPoints.Length; i++)
                     {
                         Point2d p1 = points[i] + (offset);
-                        dPoints[i] = new PointF((float)(p1.X * scale), (float)(dHeight - p1.Y * scale));
+                        dPoints[i] = new PointF((float)(p1.X * scale), (float)(p1.Y * scale));
                     }
                     g.FillPolygon(new SolidBrush(drawData.color), dPoints);
                 }
@@ -64,7 +64,7 @@ namespace SVGParser.Utils
                     {
                         Point2d p1 = points[i] + (offset);
                         Point2d p2 = points[i + 1] + (offset);
-                        g.DrawLine(pen, (float)(p1.X * scale), (float)(dHeight - p1.Y * scale), (float)(p2.X * scale), (float)(dHeight - p2.Y * scale));
+                        g.DrawLine(pen, (float)(p1.X * scale), (float)(p1.Y * scale), (float)(p2.X * scale), (float)(p2.Y * scale));
                     }
                 }
             }

@@ -12,6 +12,7 @@ namespace SVGParser
 {
     public class SVGParser
     {
+        private string _version = "2023022316";
         private bool _showAlertDialog = true;
         private bool _showMessage = true;
         private bool _outputPng = false;
@@ -21,6 +22,7 @@ namespace SVGParser
             MsgManager mm = new MsgManager(true, false);
             mm.Show("Welcome to use CADSVGParser, it's create by @vincentmmc.");
             mm.Show("use command 'ParseSvgHelp' to show help.");
+            mm.Show("version:" + this._version);
         }
 
         #region Command/Lisp Functions
@@ -56,13 +58,30 @@ namespace SVGParser
         public void CommandParseEnablePng()
         {
             this._outputPng = true;
+            new MsgManager(true, false).Show("EnablePng");
         }
 
         [CommandMethod("ParseDisablePng")]
         public void CommandParseDisablePng()
         {
             this._outputPng = false;
+            new MsgManager(true, false).Show("DisablePng");
         }
+
+        [CommandMethod("ParseEnableFlipColor")]
+        public void CommandParseEnableFlipColor()
+        {
+            ColorUtils.FLIP_WHITE_COLOR = true;
+            new MsgManager(true, false).Show("EnableFlipColor");
+        }
+
+        [CommandMethod("ParseDisableFlipColor")]
+        public void CommandParseDisableFlipColor()
+        {
+            ColorUtils.FLIP_WHITE_COLOR = false;
+            new MsgManager(true, false).Show("DisableFlipColor");
+        }
+
 
         [LispFunction("ParseSvg")]
         public void LispParseSvg(ResultBuffer rbArgs)
@@ -158,7 +177,7 @@ namespace SVGParser
                         FileUtils.SaveFile(saveFilePath, data);
                         if (this._outputPng)
                         {
-                            FileUtils.SaveFile(Path.ChangeExtension(saveFilePath,".png"), converter.ParseToBitmap());
+                            FileUtils.SaveFile(Path.ChangeExtension(saveFilePath, ".png"), converter.ParseToBitmap());
                         }
                     }
                     else
@@ -331,6 +350,9 @@ namespace SVGParser
             mm.Show("use command 'ParseSvgBlocks' to parse all block data");
             mm.Show("use command 'ParseSvgSelect' to select and parse");
             mm.Show("use command 'ParseSvgHelp' to show help");
+            mm.Show("use command 'ParseEnablePng' to enable output png, default is disable");
+            mm.Show("use command 'ParseEnableFlipColor' to enable flip white color to black, default is disable");
+            mm.Show("use command 'ParseSvgSelect' to select and parse");
             mm.Show("use command '(ParseSvg \"filename\")' to select and parse. like (ParseSvg \"C:\\\\output.svg\")");
             mm.Show("use command '(ParseSvgBlocks \"dictionaryname\")' to select and parse. like (ParseSvgBlocks \"C:\\\\output\\\\\")");
             mm.Show("use command '(ParseSvgSelect \"filename\")' to select and parse. like (ParseSvgSelect \"C:\\\\output.svg\")");

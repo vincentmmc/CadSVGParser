@@ -11,6 +11,8 @@ namespace SVGParser.Utils
 {
     class ColorUtils
     {
+        public static bool FLIP_WHITE_COLOR = false;
+
         public static string GetColorStr(Color color)
         {
             string colorValue = color.ColorValue.Name;
@@ -18,7 +20,7 @@ namespace SVGParser.Utils
             {
                 // white reserve to black
                 string str = colorValue.Substring(2, 6);
-                if (str == "ffffff")
+                if (str == "ffffff" && FLIP_WHITE_COLOR)
                 {
                     str = "000000";
                 }

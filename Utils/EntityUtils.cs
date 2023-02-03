@@ -340,5 +340,24 @@ namespace SVGParser.Utils
             }
             return false;
         }
+
+        public static Extents3d GetExtents(List<Entity> entities, double expandValue = 0)
+        {
+            Extents3d extents = new Extents3d();
+            foreach (Entity entity in entities)
+            {
+                Extents3d? ext = entity.Bounds;
+                if (ext.HasValue)
+                {
+                    extents.AddExtents(ext.Value);
+                }
+            }
+            if (expandValue > 0)
+            {
+                extents.AddPoint(new Point3d(extents.MinPoint.X - expandValue, extents.MinPoint.Y - expandValue, 0));
+                extents.AddPoint(new Point3d(extents.MaxPoint.X + expandValue, extents.MaxPoint.Y + expandValue, 0));
+            }
+            return extents;
+        }
     }
 }

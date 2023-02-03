@@ -15,13 +15,26 @@ namespace SVGParser
     public class SvgConverter
     {
         private static double DEFAULT_LINE_WIDTH = 1;
+        private static double DEFAULT_EXPAND_VALUE = 1;
         private List<Entity> _entities;
         private Dictionary<ObjectId, LayerInfo> _layerInfoDict = new Dictionary<ObjectId, LayerInfo>();
+        private Extents3d _extents;
 
         public SvgConverter(List<Entity> curves, Dictionary<ObjectId, LayerInfo> _layerInfoDict)
         {
             this._entities = curves;
             this._layerInfoDict = _layerInfoDict;
+
+            // do some calc
+            this._extents = EntityUtils.GetExtents(curves);
+
+            // flip Y and align to (0,0)
+            Matrix3d matrix = this.getMatrix();
+            for (int i = 0; i < this._entities.Count; i++)
+            {
+                this._entities[i].TransformBy(matrix);
+            }
+ 
         }
 
         public string Parse()
@@ -37,13 +50,9 @@ namespace SVGParser
                 parsers.Add(parser);
             }
             parsers.Sort();
-
-            Extents3d extents = this.GetExtents(parsers, DEFAULT_LINE_WIDTH * 0.5);
-            double sizeX = extents.MaxPoint.X - extents.MinPoint.X;
-            double sizeY = extents.MaxPoint.Y - extents.MinPoint.Y;
-            string viewBoxStr = extents.MinPoint.X.ToString() + " " + extents.MinPoint.Y.ToString() + " " + sizeX + " " + sizeY;
             string paths = this.GetPaths(parsers, DEFAULT_LINE_WIDTH);
-            string svgStr = string.Format("<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"{0}\" height=\"{1}\" viewBox=\"{2}\">{3}</svg>", sizeX.ToString(), sizeY.ToString(), viewBoxStr, paths);
+            Vector2d size = this.getSize();
+            string svgStr = string.Format("<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"{0}\" height=\"{1}\">{2}</svg>", size.X.ToString(), size.Y.ToString(), paths);
             return svgStr;
         }
 
@@ -71,7 +80,7 @@ namespace SVGParser
                 Tuple<bool, List<Point3d>> pointResult = EntityUtils.GetPoints(p.entity, 1, 5, 1000);
                 List<Point3d> point3ds = pointResult.Item2;
 
-                if(point3ds.Count==0)
+                if (point3ds.Count == 0)
                 {
                     continue;
                 }
@@ -106,13 +115,8 @@ namespace SVGParser
                 drawDatas.Add(drawData);
             }
 
-            // size and offset
-            Extents3d extents = this.GetExtents(parsers, DEFAULT_LINE_WIDTH * 0.5);
-            double sizeX = extents.MaxPoint.X - extents.MinPoint.X;
-            double sizeY = extents.MaxPoint.Y - extents.MinPoint.Y;
-            Vector2d offset = new Vector2d(-extents.MinPoint.X, -extents.MinPoint.Y);
-
-            Bitmap bitmap = ImageUtils.Draw(2f,512f, sizeX, sizeY, offset, drawDatas);
+            Vector2d size = this.getSize();
+            Bitmap bitmap = ImageUtils.Draw(2f, 512f, size.X, size.Y, new Vector2d(0, 0), drawDatas);
             return bitmap;
         }
 
@@ -165,23 +169,23 @@ namespace SVGParser
             return sb.ToString();
         }
 
-        private Extents3d GetExtents(List<SvgParserBase> parsers, double expandValue = 0)
+        private Matrix3d getMatrix()
         {
-            Extents3d extents = new Extents3d();
-            foreach (SvgParserBase svgParser in parsers)
+            double[] data =
             {
-                Extents3d? ext = svgParser.GetBounds();
-                if (ext.HasValue)
-                {
-                    extents.AddExtents(ext.Value);
-                }
-            }
-            if (expandValue > 0)
-            {
-                extents.AddPoint(new Point3d(extents.MinPoint.X - expandValue, extents.MinPoint.Y - expandValue, 0));
-                extents.AddPoint(new Point3d(extents.MaxPoint.X + expandValue, extents.MaxPoint.Y + expandValue, 0));
-            }
-            return extents;
+                1,0,0,-this._extents.MinPoint.X+DEFAULT_EXPAND_VALUE*0.5,
+                0,-1,0,this._extents.MaxPoint.Y+DEFAULT_EXPAND_VALUE*0.5,
+                0,0,1,0,
+                0,0,0,1
+            };
+            return new Matrix3d(data);
+        }
+
+        private Vector2d getSize()
+        {
+            double sizeX = this._extents.MaxPoint.X - this._extents.MinPoint.X + DEFAULT_EXPAND_VALUE;
+            double sizeY = this._extents.MaxPoint.Y - this._extents.MinPoint.Y + DEFAULT_EXPAND_VALUE;
+            return new Vector2d(sizeX, sizeY);
         }
     }
 }
