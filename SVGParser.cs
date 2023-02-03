@@ -54,28 +54,28 @@ namespace SVGParser
             this.ParseSvgBlocks(null);
         }
 
-        [CommandMethod("ParseEnablePng")]
+        [CommandMethod("ParseSvgEnablePng")]
         public void CommandParseEnablePng()
         {
             this._outputPng = true;
             new MsgManager(true, false).Show("EnablePng");
         }
 
-        [CommandMethod("ParseDisablePng")]
+        [CommandMethod("ParseSvgDisablePng")]
         public void CommandParseDisablePng()
         {
             this._outputPng = false;
             new MsgManager(true, false).Show("DisablePng");
         }
 
-        [CommandMethod("ParseEnableFlipColor")]
+        [CommandMethod("ParseSvgEnableFlipColor")]
         public void CommandParseEnableFlipColor()
         {
             ColorUtils.FLIP_WHITE_COLOR = true;
             new MsgManager(true, false).Show("EnableFlipColor");
         }
 
-        [CommandMethod("ParseDisableFlipColor")]
+        [CommandMethod("ParseSvgDisableFlipColor")]
         public void CommandParseDisableFlipColor()
         {
             ColorUtils.FLIP_WHITE_COLOR = false;
@@ -350,8 +350,8 @@ namespace SVGParser
             mm.Show("use command 'ParseSvgBlocks' to parse all block data");
             mm.Show("use command 'ParseSvgSelect' to select and parse");
             mm.Show("use command 'ParseSvgHelp' to show help");
-            mm.Show("use command 'ParseEnablePng' to enable output png, default is disable");
-            mm.Show("use command 'ParseEnableFlipColor' to enable flip white color to black, default is disable");
+            mm.Show("use command 'ParseSvgEnablePng' to enable output png, default is disable");
+            mm.Show("use command 'ParseSvgEnableFlipColor' to enable flip white color to black, default is disable");
             mm.Show("use command 'ParseSvgSelect' to select and parse");
             mm.Show("use command '(ParseSvg \"filename\")' to select and parse. like (ParseSvg \"C:\\\\output.svg\")");
             mm.Show("use command '(ParseSvgBlocks \"dictionaryname\")' to select and parse. like (ParseSvgBlocks \"C:\\\\output\\\\\")");
