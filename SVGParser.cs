@@ -12,7 +12,7 @@ namespace SVGParser
 {
     public class SVGParser
     {
-        private string _version = "2023022316";
+        private string _version = "2023020615";
         private bool _showAlertDialog = true;
         private bool _showMessage = true;
         private bool _outputPng = false;

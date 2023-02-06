@@ -147,6 +147,10 @@ namespace SVGParser
             {
                 return new SvgPolyLine2dParser(entity as Polyline2d, layerInfoDict);
             }
+            else if (entity is Polyline3d)
+            {
+                return new SvgPolyLine3dParser(entity as Polyline3d, layerInfoDict);
+            }
             else if (entity is Spline)
             {
                 return new SvgSplineParser(entity as Spline, layerInfoDict);

@@ -59,6 +59,7 @@
     <Compile Include="SVGParser.cs" />
     <Compile Include="SvgParser\core\LayerInfo.cs" />
     <Compile Include="MsgManager.cs" />
+    <Compile Include="SvgParser\SvgPolyLine3dParser.cs" />
     <Compile Include="SvgParser\SvgPolyLine2dParser.cs" />
     <Compile Include="SvgParser\SvgSplineParser.cs" />
     <Compile Include="Utils\ColorUtils.cs" />

@@ -236,6 +236,26 @@ namespace SVGParser.Utils
                     }
                     isClosePath = arc.Closed;
                 }
+                else if (curve is Polyline3d)
+                {
+                    Polyline3d arc = curve as Polyline3d;
+                    double length = arc.Length;
+                    double segmentCount = Math.Min(Math.Max(Math.Ceiling(length / segmentDist), minSegmentCount), maxSegmentCount);
+                    double distance = length / segmentCount;
+                    for (int i = 0; i <= segmentCount; i++)
+                    {
+                        Point3d p = arc.GetPointAtDist(Math.Min(i * distance, length - 1e-3));
+                        if (arc.Closed && i == segmentCount)
+                        {
+
+                        }
+                        else
+                        {
+                            points.Add(p);
+                        }
+                    }
+                    isClosePath = arc.Closed;
+                }
             }
             else if (entity is Hatch)
             {
