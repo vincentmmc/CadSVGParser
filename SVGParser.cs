@@ -214,7 +214,7 @@ namespace SVGParser
                 // collect entities
                 {
                     BlockTable acBlkTbl = trans.GetObject(db.BlockTableId, OpenMode.ForRead) as BlockTable;
-                    BlockTableRecord acBlkTblRec = trans.GetObject(acBlkTbl[BlockTableRecord.ModelSpace], OpenMode.ForWrite) as BlockTableRecord;
+                    BlockTableRecord acBlkTblRec = trans.GetObject(acBlkTbl[BlockTableRecord.ModelSpace], OpenMode.ForRead) as BlockTableRecord;
                     foreach (ObjectId item in acBlkTblRec)
                     {
                         DBObject entity = item.GetObject(OpenMode.ForRead, false, false);
@@ -367,7 +367,7 @@ namespace SVGParser
                         }
                         DBObject blockObject = trans.GetObject(blockId, OpenMode.ForRead);
                         List<Entity> supportedEntities = new List<Entity>();
-                        BlockTableRecord acBlkTblRec = blockId.GetObject(OpenMode.ForWrite, false, false) as BlockTableRecord;
+                        BlockTableRecord acBlkTblRec = blockId.GetObject(OpenMode.ForRead, false, false) as BlockTableRecord;
                         foreach (ObjectId item in acBlkTblRec)
                         {
                             DBObject entity = item.GetObject(OpenMode.ForRead, false, false);
@@ -432,7 +432,7 @@ namespace SVGParser
         /// <param name="targets"></param>
         private void parseBlockReference(Transaction trans, BlockReference blockRef, Matrix3d? parentMatrix, List<Entity> targets)
         {
-            BlockTableRecord bfTableRecord = trans.GetObject(blockRef.BlockTableRecord, OpenMode.ForWrite) as BlockTableRecord;
+            BlockTableRecord bfTableRecord = trans.GetObject(blockRef.BlockTableRecord, OpenMode.ForRead) as BlockTableRecord;
             foreach (ObjectId bfItem in bfTableRecord)
             {
                 Matrix3d finalMatrix = parentMatrix.HasValue ? parentMatrix.Value.PostMultiplyBy(blockRef.BlockTransform) : blockRef.BlockTransform;
