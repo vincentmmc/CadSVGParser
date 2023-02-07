@@ -13,7 +13,7 @@ public struct ImageDrawData
     public List<Point2d> point2ds;
     public Color color;
     public float lineWidth;
-    public bool isClosePath;
+    public bool isPolygon;
 }
 
 namespace SVGParser.Utils
@@ -47,7 +47,7 @@ namespace SVGParser.Utils
             foreach (ImageDrawData drawData in drawDatas)
             {
                 List<Point2d> points = drawData.point2ds;
-                if (drawData.isClosePath)
+                if (drawData.isPolygon)
                 {
                     PointF[] dPoints = new PointF[points.Count];
                     for (int i = 0; i < dPoints.Length; i++)

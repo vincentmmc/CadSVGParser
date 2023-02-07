@@ -1,10 +1,12 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using Autodesk.AutoCAD.ApplicationServices;
 using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.EditorInput;
 using Autodesk.AutoCAD.Geometry;
 using Autodesk.AutoCAD.Runtime;
+using Autodesk.AutoCAD.Windows;
 using SVGParser.SvgParser.core;
 using SVGParser.Utils;
 
@@ -12,10 +14,12 @@ namespace SVGParser
 {
     public class SVGParser
     {
-        private string _version = "2023020615";
+        private string _version = "2023020710";
         private bool _showAlertDialog = true;
         private bool _showMessage = true;
         private bool _outputPng = false;
+
+        private bool _isLoadContextMenu = false;
 
         public SVGParser()
         {
@@ -26,6 +30,65 @@ namespace SVGParser
         }
 
         #region Command/Lisp Functions
+
+        [CommandMethod("ParseSvgLoadMenu")]
+        public void CommandParseSvgLoad()
+        {
+            if (_isLoadContextMenu)
+            {
+                return;
+            }
+            ContextMenuExtension contextMenu = new ContextMenuExtension();
+            contextMenu.Title = "ParseSvgTool";
+
+            // add menu items
+            List<Tuple<string, Action>> functions = getFunctions();
+            foreach (Tuple<string, Action> f in functions)
+            {
+                string itemName = f.Item1;
+                Action action = f.Item2;
+                MenuItem item = new MenuItem(itemName);
+                item.Click += new EventHandler((object sender, EventArgs e) =>
+                {
+                    action.Invoke();
+                });
+                contextMenu.MenuItems.Add(item);
+            }
+
+            // add check items
+            {
+                // enable/disable png output
+                {
+                    MenuItem item = new MenuItem("PNG Output");
+                    item.Checked = _outputPng;
+                    item.Click += new EventHandler((object sender, EventArgs e) =>
+                    {
+                        item.Checked = !item.Checked;
+                        _outputPng = item.Checked;
+                        string tips = _outputPng ? "Enable PNG Output" : "Disable PNG Output";
+                        new MsgManager(true, false).Show(tips);
+                    });
+                    contextMenu.MenuItems.Add(item);
+
+                }
+
+                // enable/disable color flip
+                {
+                    MenuItem item = new MenuItem("Color Flip");
+                    item.Checked = ColorUtils.FLIP_WHITE_COLOR;
+                    item.Click += new EventHandler((object sender, EventArgs e) =>
+                    {
+                        item.Checked = !item.Checked;
+                        ColorUtils.FLIP_WHITE_COLOR = item.Checked;
+                        string tips = ColorUtils.FLIP_WHITE_COLOR ? "Enable Color Flip" : "Disable Color Flip";
+                        new MsgManager(true, false).Show(tips);
+                    });
+                    contextMenu.MenuItems.Add(item);
+                }
+            }
+            Application.AddDefaultContextMenuExtension(contextMenu);
+            _isLoadContextMenu = true;
+        }
 
         [CommandMethod("ParseSvgHelp")]
         public void CommandParseSvgHelp()
@@ -81,7 +144,6 @@ namespace SVGParser
             ColorUtils.FLIP_WHITE_COLOR = false;
             new MsgManager(true, false).Show("DisableFlipColor");
         }
-
 
         [LispFunction("ParseSvg")]
         public void LispParseSvg(ResultBuffer rbArgs)
@@ -455,6 +517,27 @@ namespace SVGParser
         {
             this._showMessage = true;
             this._showAlertDialog = true;
+        }
+
+        private List<Tuple<string, Action>> getFunctions()
+        {
+            List<Tuple<string, Action>> functionDatas = new List<Tuple<string, Action>>();
+            functionDatas.Add(new Tuple<string, Action>("Parse Select", () =>
+            {
+                this.initMessageParam();
+                this.ParseSvgSelect(null);
+            }));
+            functionDatas.Add(new Tuple<string, Action>("Parse Current", () =>
+            {
+                this.initMessageParam();
+                this.ParseSvg(null);
+            }));
+            functionDatas.Add(new Tuple<string, Action>("Parse Blocks", () =>
+            {
+                this.initMessageParam();
+                this.ParseSvgBlocks(null);
+            }));
+            return functionDatas;
         }
 
         #endregion

@@ -26,19 +26,30 @@ namespace SVGParser
                 return "";
             }
             string colorStr = this.Color;
-            string path = string.Format(this._svgFormat, this.GetSvgPath(), colorStr, lineWidth, "Hatch");
-            return path;
+            StringBuilder sb = new StringBuilder();
+            List<string> paths = GetSvgPath();
+            for (int i = 0; i < paths.Count; i++)
+            {
+                if (i != 0)
+                {
+                    sb.Append("\n");
+                }
+                string path = string.Format(this._svgFormat, paths[i], colorStr, lineWidth, "Hatch" + i.ToString());
+                sb.Append(path);
+            }
+            return sb.ToString();
         }
 
-        private string GetSvgPath()
+        private List<string> GetSvgPath()
         {
+            List<string> paths = new List<string>();
             int loopNums = this._hatch.NumberOfLoops;
-            string str = "";
             for (int loopIndex = 0; loopIndex < loopNums; loopIndex++)
             {
                 HatchLoop loop = this._hatch.GetLoopAt(loopIndex);
                 if (loop.LoopType == (HatchLoopTypes.External | HatchLoopTypes.Polyline | HatchLoopTypes.Derived) && loop.IsPolyline)
                 {
+                    string str = "";
                     BulgeVertexCollection bulgeVertexs = loop.Polyline;
                     int verticeNum = bulgeVertexs.Count;
                     for (int i = 0; i < verticeNum; i++)
@@ -72,10 +83,10 @@ namespace SVGParser
                         }
                     }
                     str += "Z";
-                    break;
+                    paths.Add(str);
                 }
             }
-            return str;
+            return paths;
         }
     }
 }

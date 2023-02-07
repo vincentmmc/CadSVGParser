@@ -6,6 +6,13 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
+
+public struct EntityPointsData {
+    public bool isClosePath;
+    public List<Point3d> points;
+}
+
+
 namespace SVGParser.Utils
 {
     class EntityUtils
@@ -13,83 +20,92 @@ namespace SVGParser.Utils
         public static List<Entity> ConvertByNonUniformMatrix(Entity entity, Matrix3d matrix)
         {
             List<Entity> outs = new List<Entity>();
-            Tuple<bool, List<Point3d>> pointResult = GetPoints(entity);
-
-            bool isClosePath = pointResult.Item1;
-            List<Point3d> points = pointResult.Item2;
-
+            List<EntityPointsData> pointResult = GetPoints(entity);
             if (entity is Hatch)
             {
-                if (points.Count >= 3)
+                foreach (EntityPointsData pData in pointResult)
                 {
-                    Hatch hatch = entity.Clone() as Hatch;
-                    Point2d[] ps = new Point2d[points.Count];
-                    double[] ds = new double[points.Count];
-                    for (int i = 0; i < points.Count; i++)
+                    List<Point3d> points = pData.points;
+                    bool isClosePath = pData.isClosePath;
+                    if (points.Count >= 3)
                     {
-                        ps[i] = to2d(clone3d(points[i]).TransformBy(matrix));
-                        ds[i] = 0;
+                        Hatch hatch = entity.Clone() as Hatch;
+                        Point2d[] ps = new Point2d[points.Count];
+                        double[] ds = new double[points.Count];
+                        for (int i = 0; i < points.Count; i++)
+                        {
+                            ps[i] = to2d(clone3d(points[i]).TransformBy(matrix));
+                            ds[i] = 0;
+                        }
+                        int loopNumber = hatch.NumberOfLoops;
+                        for (int i = 0; i < loopNumber; i++)
+                        {
+                            hatch.RemoveLoopAt(0);
+                        }
+                        hatch.AppendLoop((HatchLoopTypes.External | HatchLoopTypes.Polyline | HatchLoopTypes.Derived), new Point2dCollection(ps), new DoubleCollection(ds));
+                        outs.Add(hatch);
                     }
-                    int loopNumber = hatch.NumberOfLoops;
-                    for (int i = 0; i < loopNumber; i++)
-                    {
-                        hatch.RemoveLoopAt(0);
-                    }
-                    hatch.AppendLoop((HatchLoopTypes.External | HatchLoopTypes.Polyline | HatchLoopTypes.Derived), new Point2dCollection(ps), new DoubleCollection(ds));
-                    outs.Add(hatch);
                 }
             }
             else
             {
-                if (isClosePath || entity is Hatch)
+                foreach (EntityPointsData pData in pointResult)
                 {
-                    if (points.Count >= 3)
+                    List<Point3d> points = pData.points;
+                    bool isClosePath = pData.isClosePath;
+                    if (isClosePath)
                     {
-                        Polyline pl = new Polyline(points.Count);
-                        for (int i = 0; i < points.Count; i++)
+                        if (points.Count >= 3)
                         {
-                            pl.AddVertexAt(i, to2d(clone3d(points[i]).TransformBy(matrix)), 0, 0, 0);
+                            Polyline pl = new Polyline(points.Count);
+                            for (int i = 0; i < points.Count; i++)
+                            {
+                                pl.AddVertexAt(i, to2d(clone3d(points[i]).TransformBy(matrix)), 0, 0, 0);
+                            }
+                            pl.Closed = true;
+                            pl.Color = entity.Color;
+                            pl.LayerId = entity.LayerId;
+                            outs.Add(pl);
                         }
-                        pl.Closed = true;
-                        pl.Color = entity.Color;
-                        pl.LayerId = entity.LayerId;
-                        outs.Add(pl);
                     }
-                }
-                else
-                {
-                    if (points.Count == 2)
+                    else
                     {
-                        Point3d start = clone3d(points[0]).TransformBy(matrix);
-                        Point3d end = clone3d(points[1]).TransformBy(matrix);
-                        Line line = new Line(start, end);
-                        outs.Add(line);
-                        line.Color = entity.Color;
-                        line.LayerId = entity.LayerId;
-                    }
-                    else if (points.Count >= 3)
-                    {
-                        Polyline pl = new Polyline(points.Count);
-                        for (int i = 0; i < points.Count; i++)
+                        if (points.Count == 2)
                         {
-                            pl.AddVertexAt(i, to2d(clone3d(points[i]).TransformBy(matrix)), 0, 0, 0);
+                            Point3d start = clone3d(points[0]).TransformBy(matrix);
+                            Point3d end = clone3d(points[1]).TransformBy(matrix);
+                            Line line = new Line(start, end);
+                            outs.Add(line);
+                            line.Color = entity.Color;
+                            line.LayerId = entity.LayerId;
                         }
-                        pl.Closed = false;
-                        pl.Color = entity.Color;
-                        pl.LayerId = entity.LayerId;
-                        outs.Add(pl);
+                        else if (points.Count >= 3)
+                        {
+                            Polyline pl = new Polyline(points.Count);
+                            for (int i = 0; i < points.Count; i++)
+                            {
+                                pl.AddVertexAt(i, to2d(clone3d(points[i]).TransformBy(matrix)), 0, 0, 0);
+                            }
+                            pl.Closed = false;
+                            pl.Color = entity.Color;
+                            pl.LayerId = entity.LayerId;
+                            outs.Add(pl);
+                        }
                     }
-                }
+                } 
             }
             return outs;
         }
 
-        public static Tuple<bool, List<Point3d>> GetPoints(Entity entity, double segmentDist = 3, int minSegmentCount = 5, int maxSegmentCount = 100)
+        public static List<EntityPointsData> GetPoints(Entity entity, double segmentDist = 3, int minSegmentCount = 5, int maxSegmentCount = 100)
         {
-            List<Point3d> points = new List<Point3d>();
-            bool isClosePath = false;
+            List<EntityPointsData> pDatas = new List<EntityPointsData>();
+
             if (entity is Curve)
             {
+                List<Point3d> points = new List<Point3d>();
+                bool isClosePath = false;
+
                 Curve curve = entity as Curve;
                 if (curve is Arc)
                 {
@@ -256,6 +272,11 @@ namespace SVGParser.Utils
                     }
                     isClosePath = arc.Closed;
                 }
+
+                EntityPointsData pData = new EntityPointsData();
+                pData.points = points;
+                pData.isClosePath = isClosePath;
+                pDatas.Add(pData);
             }
             else if (entity is Hatch)
             {
@@ -266,6 +287,9 @@ namespace SVGParser.Utils
                     HatchLoop loop = hatch.GetLoopAt(loopIndex);
                     if (loop.LoopType == (HatchLoopTypes.External | HatchLoopTypes.Polyline | HatchLoopTypes.Derived) && loop.IsPolyline)
                     {
+                        List<Point3d> points = new List<Point3d>();
+                        bool isClosePath = true;
+
                         BulgeVertexCollection bulgeVertexs = loop.Polyline;
                         int verticeNum = bulgeVertexs.Count;
                         for (int i = 0; i < verticeNum; i++)
@@ -313,14 +337,15 @@ namespace SVGParser.Utils
                                 points.Add(p);
                             });
                         }
-                        break;
+
+                        EntityPointsData pData = new EntityPointsData();
+                        pData.points = points;
+                        pData.isClosePath = isClosePath;
+                        pDatas.Add(pData);
                     }
                 }
-
-
-                isClosePath = true;
             }
-            return new Tuple<bool, List<Point3d>>(isClosePath, points);
+            return pDatas;
         }
 
         public static Point2d to2d(Point3d p)

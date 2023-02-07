@@ -74,45 +74,45 @@ namespace SVGParser
             List<ImageDrawData> drawDatas = new List<ImageDrawData>();
             foreach (SvgParserBase p in parsers)
             {
-                List<Point2d> points = new List<Point2d>();
-                bool isClosePath = false;
-                System.Drawing.Color color = System.Drawing.Color.White;
-                Tuple<bool, List<Point3d>> pointResult = EntityUtils.GetPoints(p.entity, 1, 5, 1000);
-                List<Point3d> point3ds = pointResult.Item2;
-
-                if (point3ds.Count == 0)
+                List<EntityPointsData> pointResult = EntityUtils.GetPoints(p.entity, 1, 5, 1000);
+                foreach (EntityPointsData pData in pointResult)
                 {
-                    continue;
-                }
-
-                if (p is SvgHatchParser)
-                {
-                    point3ds.ForEach(pp =>
+                    List<Point3d> point3ds = pData.points;
+                    if (point3ds.Count == 0)
                     {
-                        points.Add(EntityUtils.to2d(pp));
-                    });
-                    isClosePath = true;
-                    color = System.Drawing.Color.White;
-                }
-                else
-                {
-                    point3ds.ForEach(pp =>
-                    {
-                        points.Add(EntityUtils.to2d(pp));
-                    });
-                    if (pointResult.Item1)
-                    {
-                        points.Add(EntityUtils.to2d(point3ds[0]));
+                        continue;
                     }
-                    color = System.Drawing.Color.Black;
+
+                    List<Point2d> points = new List<Point2d>();
+                    Color color = Color.White;
+                    bool isPolygon = false;
+                    if (p is SvgHatchParser)
+                    {
+                        point3ds.ForEach(pp =>
+                        {
+                            points.Add(EntityUtils.to2d(pp));
+                        });
+                        isPolygon = true;
+                        color = Color.White;
+                    }
+                    else
+                    {
+                        point3ds.ForEach(pp =>
+                        {
+                            points.Add(EntityUtils.to2d(pp));
+                        });
+                        if (pData.isClosePath)
+                        {
+                            points.Add(EntityUtils.to2d(point3ds[0]));
+                        }
+                        color = Color.Black;
+                    }
+                    ImageDrawData drawData = new ImageDrawData();
+                    drawData.color = color;
+                    drawData.point2ds = points;
+                    drawData.isPolygon = isPolygon;
+                    drawDatas.Add(drawData);
                 }
-
-
-                ImageDrawData drawData = new ImageDrawData();
-                drawData.color = color;
-                drawData.point2ds = points;
-                drawData.isClosePath = isClosePath;
-                drawDatas.Add(drawData);
             }
 
             Vector2d size = this.getSize();

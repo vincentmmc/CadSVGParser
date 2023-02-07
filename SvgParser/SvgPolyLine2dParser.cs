@@ -22,16 +22,20 @@ namespace SVGParser.SvgParser
         public override string GetPathXml(double lineWidth)
         {
             string colorStr = this.Color;
-            string path = string.Format(this._svgFormat, this.GetSvgPath(), colorStr, lineWidth,"Polyline2d");
+            string path = string.Format(this._svgFormat, this.GetSvgPath(), colorStr, lineWidth, "Polyline2d");
             return path;
         }
 
         private string GetSvgPath()
         {
             string str = "";
-            Tuple<bool, List<Point3d>> pointResult = EntityUtils.GetPoints(this._entity);
-            bool isClosePath = pointResult.Item1;
-            List<Point3d> points = pointResult.Item2;
+            List<EntityPointsData> pointResult = EntityUtils.GetPoints(this._entity);
+            if (pointResult.Count == 0)
+            {
+                return str;
+            }
+            bool isClosePath = pointResult[0].isClosePath;
+            List<Point3d> points = pointResult[0].points;
             for (int i = 0; i < points.Count; i++)
             {
                 Point3d curPoint = points[i];
