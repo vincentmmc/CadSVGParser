@@ -235,19 +235,29 @@ namespace SVGParser.Utils
                 else if (curve is Polyline2d)
                 {
                     Polyline2d arc = curve as Polyline2d;
-                    double length = arc.Length;
-                    double segmentCount = Math.Min(Math.Max(Math.Ceiling(length / segmentDist), minSegmentCount), maxSegmentCount);
-                    double distance = length / segmentCount;
-                    for (int i = 0; i <= segmentCount; i++)
+                    if (arc.PolyType == Poly2dType.SimplePoly)
                     {
-                        Point3d p = arc.GetPointAtDist(Math.Min(i * distance, length - 1e-3));
-                        if (arc.Closed && i == segmentCount)
+                        foreach (Vertex2d p in arc)
                         {
-
+                            points.Add(p.Position);
                         }
-                        else
+                    }
+                    else
+                    {
+                        double length = arc.Length;
+                        double segmentCount = Math.Min(Math.Max(Math.Ceiling(length / segmentDist), minSegmentCount), maxSegmentCount);
+                        double distance = length / segmentCount;
+                        for (int i = 0; i <= segmentCount; i++)
                         {
-                            points.Add(p);
+                            Point3d p = arc.GetPointAtDist(Math.Min(i * distance, length - 1e-3));
+                            if (arc.Closed && i == segmentCount)
+                            {
+
+                            }
+                            else
+                            {
+                                points.Add(p);
+                            }
                         }
                     }
                     isClosePath = arc.Closed;
@@ -255,19 +265,29 @@ namespace SVGParser.Utils
                 else if (curve is Polyline3d)
                 {
                     Polyline3d arc = curve as Polyline3d;
-                    double length = arc.Length;
-                    double segmentCount = Math.Min(Math.Max(Math.Ceiling(length / segmentDist), minSegmentCount), maxSegmentCount);
-                    double distance = length / segmentCount;
-                    for (int i = 0; i <= segmentCount; i++)
+                    if (arc.PolyType == Poly3dType.SimplePoly)
                     {
-                        Point3d p = arc.GetPointAtDist(Math.Min(i * distance, length - 1e-3));
-                        if (arc.Closed && i == segmentCount)
+                        foreach (PolylineVertex3d p in arc)
                         {
-
+                            points.Add(p.Position);
                         }
-                        else
+                    }
+                    else
+                    {
+                        double length = arc.Length;
+                        double segmentCount = Math.Min(Math.Max(Math.Ceiling(length / segmentDist), minSegmentCount), maxSegmentCount);
+                        double distance = length / segmentCount;
+                        for (int i = 0; i <= segmentCount; i++)
                         {
-                            points.Add(p);
+                            Point3d p = arc.GetPointAtDist(Math.Min(i * distance, length - 1e-3));
+                            if (arc.Closed && i == segmentCount)
+                            {
+
+                            }
+                            else
+                            {
+                                points.Add(p);
+                            }
                         }
                     }
                     isClosePath = arc.Closed;
