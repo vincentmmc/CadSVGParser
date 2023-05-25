@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using Autodesk.AutoCAD.ApplicationServices;
+using Autodesk.AutoCAD.Colors;
 using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.EditorInput;
 using Autodesk.AutoCAD.Geometry;
@@ -12,9 +13,9 @@ using SVGParser.Utils;
 
 namespace SVGParser
 {
-    public class SVGParser
+    public class SVGParser:IExtensionApplication
     {
-        private string _version = "2023020713";
+        private string _version = "20230525";
         private bool _showAlertDialog = true;
         private bool _showMessage = true;
         private bool _outputPng = false;
@@ -23,72 +24,10 @@ namespace SVGParser
 
         public SVGParser()
         {
-            MsgManager mm = new MsgManager(true, false);
-            mm.Show("Welcome to use CADSVGParser, it's create by @vincentmmc.");
-            mm.Show("use command 'ParseSvgHelp' to show help.");
-            mm.Show("version:" + this._version);
+            
         }
 
         #region Command/Lisp Functions
-
-        [CommandMethod("ParseSvgLoadMenu")]
-        public void CommandParseSvgLoad()
-        {
-            if (_isLoadContextMenu)
-            {
-                return;
-            }
-            ContextMenuExtension contextMenu = new ContextMenuExtension();
-            contextMenu.Title = "ParseSvgTool";
-
-            // add menu items
-            List<Tuple<string, Action>> functions = getFunctions();
-            foreach (Tuple<string, Action> f in functions)
-            {
-                string itemName = f.Item1;
-                Action action = f.Item2;
-                MenuItem item = new MenuItem(itemName);
-                item.Click += new EventHandler((object sender, EventArgs e) =>
-                {
-                    action.Invoke();
-                });
-                contextMenu.MenuItems.Add(item);
-            }
-
-            // add check items
-            {
-                // enable/disable png output
-                {
-                    MenuItem item = new MenuItem("PNG Output");
-                    item.Checked = _outputPng;
-                    item.Click += new EventHandler((object sender, EventArgs e) =>
-                    {
-                        item.Checked = !item.Checked;
-                        _outputPng = item.Checked;
-                        string tips = _outputPng ? "Enable PNG Output" : "Disable PNG Output";
-                        new MsgManager(true, false).Show(tips);
-                    });
-                    contextMenu.MenuItems.Add(item);
-
-                }
-
-                // enable/disable color flip
-                {
-                    MenuItem item = new MenuItem("Color Flip");
-                    item.Checked = ColorUtils.FLIP_WHITE_COLOR;
-                    item.Click += new EventHandler((object sender, EventArgs e) =>
-                    {
-                        item.Checked = !item.Checked;
-                        ColorUtils.FLIP_WHITE_COLOR = item.Checked;
-                        string tips = ColorUtils.FLIP_WHITE_COLOR ? "Enable Color Flip" : "Disable Color Flip";
-                        new MsgManager(true, false).Show(tips);
-                    });
-                    contextMenu.MenuItems.Add(item);
-                }
-            }
-            Application.AddDefaultContextMenuExtension(contextMenu);
-            _isLoadContextMenu = true;
-        }
 
         [CommandMethod("ParseSvgHelp")]
         public void CommandParseSvgHelp()
@@ -221,7 +160,7 @@ namespace SVGParser
                         if (entity is BlockReference)
                         {
                             BlockReference blockRef = entity as BlockReference;
-                            this.parseBlockReference(trans, blockRef, null, supportedEntities);
+                            this.parseBlockReference(trans, blockRef, null, supportedEntities, blockRef.Color);
                         }
                         else if (entity is Entity)
                         {
@@ -287,7 +226,7 @@ namespace SVGParser
                             if (entity is BlockReference)
                             {
                                 BlockReference blockRef = entity as BlockReference;
-                                this.parseBlockReference(trans, blockRef, null, supportedEntities);
+                                this.parseBlockReference(trans, blockRef, null, supportedEntities, blockRef.Color);
                             }
                             else if (entity is Entity)
                             {
@@ -374,7 +313,7 @@ namespace SVGParser
                             if (entity is BlockReference)
                             {
                                 BlockReference blockRef = entity as BlockReference;
-                                this.parseBlockReference(trans, blockRef, null, supportedEntities);
+                                this.parseBlockReference(trans, blockRef, null, supportedEntities, blockRef.Color);
                             }
                             else if (entity is Entity)
                             {
@@ -430,7 +369,7 @@ namespace SVGParser
         /// <param name="blockRef"></param>
         /// <param name="parentMatrix"></param>
         /// <param name="targets"></param>
-        private void parseBlockReference(Transaction trans, BlockReference blockRef, Matrix3d? parentMatrix, List<Entity> targets)
+        private void parseBlockReference(Transaction trans, BlockReference blockRef, Matrix3d? parentMatrix, List<Entity> targets, Color parentBlockColor)
         {
             BlockTableRecord bfTableRecord = trans.GetObject(blockRef.BlockTableRecord, OpenMode.ForRead) as BlockTableRecord;
             foreach (ObjectId bfItem in bfTableRecord)
@@ -439,7 +378,9 @@ namespace SVGParser
                 DBObject bfEntity = bfItem.GetObject(OpenMode.ForRead, false, false);
                 if (bfEntity is BlockReference)
                 {
-                    this.parseBlockReference(trans, bfEntity as BlockReference, finalMatrix, targets);
+                    BlockReference childBlock = bfEntity as BlockReference;
+                    Color blockColor = childBlock.Color.IsByBlock ? parentBlockColor : childBlock.Color;
+                    this.parseBlockReference(trans, bfEntity as BlockReference, finalMatrix, targets, blockColor);
                 }
                 else if (bfEntity is Entity)
                 {
@@ -447,6 +388,10 @@ namespace SVGParser
                     try
                     {
                         entity = bfEntity.Clone() as Entity;
+                        if (entity.Color.IsByBlock)
+                        {
+                            entity.Color = parentBlockColor;
+                        }
                         entity.TransformBy(finalMatrix);
                         targets.Add(entity);
                     }
@@ -538,6 +483,78 @@ namespace SVGParser
                 this.ParseSvgBlocks(null);
             }));
             return functionDatas;
+        }
+
+        private void LoadContextMenu()
+        {
+            if (_isLoadContextMenu)
+            {
+                return;
+            }
+            ContextMenuExtension contextMenu = new ContextMenuExtension();
+            contextMenu.Title = "ParseSvgTool";
+
+            // add menu items
+            List<Tuple<string, Action>> functions = getFunctions();
+            foreach (Tuple<string, Action> f in functions)
+            {
+                string itemName = f.Item1;
+                Action action = f.Item2;
+                MenuItem item = new MenuItem(itemName);
+                item.Click += new EventHandler((object sender, EventArgs e) =>
+                {
+                    action.Invoke();
+                });
+                contextMenu.MenuItems.Add(item);
+            }
+
+            // add check items
+            {
+                // enable/disable png output
+                {
+                    MenuItem item = new MenuItem("PNG Output");
+                    item.Checked = _outputPng;
+                    item.Click += new EventHandler((object sender, EventArgs e) =>
+                    {
+                        item.Checked = !item.Checked;
+                        _outputPng = item.Checked;
+                        string tips = _outputPng ? "Enable PNG Output" : "Disable PNG Output";
+                        new MsgManager(true, false).Show(tips);
+                    });
+                    contextMenu.MenuItems.Add(item);
+
+                }
+
+                // enable/disable color flip
+                {
+                    MenuItem item = new MenuItem("Color Flip");
+                    item.Checked = ColorUtils.FLIP_WHITE_COLOR;
+                    item.Click += new EventHandler((object sender, EventArgs e) =>
+                    {
+                        item.Checked = !item.Checked;
+                        ColorUtils.FLIP_WHITE_COLOR = item.Checked;
+                        string tips = ColorUtils.FLIP_WHITE_COLOR ? "Enable Color Flip" : "Disable Color Flip";
+                        new MsgManager(true, false).Show(tips);
+                    });
+                    contextMenu.MenuItems.Add(item);
+                }
+            }
+            Application.AddDefaultContextMenuExtension(contextMenu);
+            _isLoadContextMenu = true;
+        }
+
+        public void Initialize()
+        {
+            MsgManager mm = new MsgManager(true, false);
+            mm.Show("Welcome to use CADSVGParser, it's create by @vincentmmc.");
+            mm.Show("use command 'ParseSvgHelp' to show help.");
+            mm.Show("version:" + this._version);
+            LoadContextMenu();
+        }
+
+        public void Terminate()
+        {
+
         }
 
         #endregion

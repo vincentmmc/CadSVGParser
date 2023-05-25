@@ -17,12 +17,37 @@ namespace SVGParser
         protected int _order;
         protected Entity _entity;
         protected Dictionary<ObjectId, LayerInfo> _layerInfo;
+        protected int _pointsMinSegments = 5;
+        protected int _pointsMaxSegments = 1000;
 
 
         public Entity entity {
             get
             {
                 return this._entity;
+            }
+        }
+
+        public int order {
+            get
+            {
+                return this._order;
+            }
+        }
+
+        public int pointsMinSegments
+        {
+            get
+            {
+                return this._pointsMinSegments;
+            }
+        }
+
+        public int pointsMaxSegments
+        {
+            get
+            {
+                return this._pointsMaxSegments;
             }
         }
 
@@ -49,7 +74,7 @@ namespace SVGParser
 
         public int CompareTo(SvgParserBase other)
         {
-            return this._order - other._order;
+            return this.order - other.order;
         }  
     }
 }

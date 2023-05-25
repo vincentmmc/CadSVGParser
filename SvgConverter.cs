@@ -74,7 +74,7 @@ namespace SVGParser
             List<ImageDrawData> drawDatas = new List<ImageDrawData>();
             foreach (SvgParserBase p in parsers)
             {
-                List<EntityPointsData> pointResult = EntityUtils.GetPoints(p.entity, 1, 5, 1000);
+                List<EntityPointsData> pointResult = EntityUtils.GetPoints(p.entity, 1, p.pointsMinSegments, p.pointsMaxSegments);
                 foreach (EntityPointsData pData in pointResult)
                 {
                     List<Point3d> point3ds = pData.points;

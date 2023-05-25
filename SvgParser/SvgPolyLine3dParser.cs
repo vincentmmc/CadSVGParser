@@ -29,7 +29,7 @@ namespace SVGParser.SvgParser
         private string GetSvgPath()
         {
             string str = "";
-            List<EntityPointsData> pointResult = EntityUtils.GetPoints(this._entity);
+            List<EntityPointsData> pointResult = EntityUtils.GetPoints(this._entity,3, this._pointsMinSegments, this._pointsMaxSegments);
             if (pointResult.Count == 0)
             {
                 return str;

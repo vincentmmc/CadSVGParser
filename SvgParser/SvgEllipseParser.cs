@@ -17,6 +17,8 @@ namespace SVGParser
         {
             this._ellipse = this._entity as Ellipse;
             this._svgFormat = "<path d=\"{0}\" fill=\"none\" stroke=\"{1}\" stroke-width=\"{2}\" name=\"{3}\"/>";
+            this._pointsMinSegments = 50;
+            this._pointsMaxSegments = 500;
         }
 
         public override string GetPathXml(double lineWidth)
@@ -29,7 +31,7 @@ namespace SVGParser
         private string GetSvgPath()
         {
             string str = "";
-            List<EntityPointsData> pointResult = EntityUtils.GetPoints(this._entity);
+            List<EntityPointsData> pointResult = EntityUtils.GetPoints(this._entity, 3, this._pointsMinSegments, this._pointsMaxSegments);
             if (pointResult.Count == 0)
             {
                 return str;
